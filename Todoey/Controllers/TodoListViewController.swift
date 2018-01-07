@@ -18,7 +18,8 @@ class TodoListViewController: UITableViewController {
     ** Note that the initial values below are only retained if
     ** itemArray has not yet been saved in persistent storage
     */
-    var itemArray = ["Find Mike", "Buy Eggos", "Destroy Demogorgon"]
+//    var itemArray = ["Find Mike", "Buy Eggos", "Destroy Demogorgon"]
+    var itemArray = [Item]()
     
     // Key for accessing itemArray in persistent storage
     let itemArrayKey = "TodoListArray"
@@ -26,8 +27,12 @@ class TodoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        itemArray.append(Item("Find Mike"))
+        itemArray.append(Item("Buy Eggos"))
+        itemArray.append(Item("Destroy Demogorgon"))
+        
         // If itemArray has been saved in persistent storage, then load it
-        if let items = defaults.array(forKey: itemArrayKey) as? [String] {
+        if let items = defaults.array(forKey: itemArrayKey) as? [Item] {
             itemArray = items
         }
     }
@@ -44,7 +49,10 @@ class TodoListViewController: UITableViewController {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
-        cell.textLabel?.text = itemArray[indexPath.row]
+        let item = itemArray[indexPath.row]
+        
+        cell.textLabel?.text = item.title
+        cell.accessoryType = item.done ? .checkmark : .none
         
         return cell
     }
@@ -54,11 +62,10 @@ class TodoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         // Toggle checkmark
-        if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .none
-        } else {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-        }
+        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        
+        // Redraw so checkmark will change
+        tableView.reloadData()
         
         // Deselect so the row doesn't remain highlighted
         tableView.deselectRow(at: indexPath, animated: true)
@@ -75,7 +82,7 @@ class TodoListViewController: UITableViewController {
             // what will happen once the user clicks the Add Item button on our UIAlert
 
             // Add new item to array
-            self.itemArray.append(textField.text!)
+            self.itemArray.append(Item(textField.text!))
             
             // Save itemArray in persistent storage
             self.defaults.set(self.itemArray, forKey: self.itemArrayKey)

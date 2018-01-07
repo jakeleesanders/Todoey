@@ -10,31 +10,21 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    // Persistent storage
-    let defaults = UserDefaults.standard
-
-    /*
-    ** Array of items in the todo list
-    ** Note that the initial values below are only retained if
-    ** itemArray has not yet been saved in persistent storage
-    */
-//    var itemArray = ["Find Mike", "Buy Eggos", "Destroy Demogorgon"]
+    // Array of items in the todo list
     var itemArray = [Item]()
-    
-    // Key for accessing itemArray in persistent storage
-    let itemArrayKey = "TodoListArray"
-    
+
+    // Persistent storage for itemArray
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+   
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        itemArray.append(Item("Find Mike"))
-        itemArray.append(Item("Buy Eggos"))
-        itemArray.append(Item("Destroy Demogorgon"))
         
-        // If itemArray has been saved in persistent storage, then load it
-        if let items = defaults.array(forKey: itemArrayKey) as? [Item] {
-            itemArray = items
-        }
+//        itemArray.append(Item("Find Mike"))
+//        itemArray.append(Item("Buy Eggos"))
+//        itemArray.append(Item("Destroy Demogorgon"))
+        
+        // Load itemArray from persistent storage
+        loadItems()
     }
 
     //MARK: Tableview Datasource Methods
@@ -64,6 +54,9 @@ class TodoListViewController: UITableViewController {
         // Toggle checkmark
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
+        // Encode itemArray in persistent storage
+        saveItems()
+        
         // Redraw so checkmark will change
         tableView.reloadData()
         
@@ -84,8 +77,8 @@ class TodoListViewController: UITableViewController {
             // Add new item to array
             self.itemArray.append(Item(textField.text!))
             
-            // Save itemArray in persistent storage
-            self.defaults.set(self.itemArray, forKey: self.itemArrayKey)
+            // Encode itemArray in persistent storage
+            self.saveItems()
             
             // Redraw the table to show the new item
             self.tableView.reloadData()
@@ -101,5 +94,29 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    func saveItems() {
+        // Encode itemArray in persistent storage
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        }
+        catch {
+            print("Error encoding item array, \(error)")
+        }
+    }
+    
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            }
+            catch {
+                print("Error decoding item array, \(error)")
+            }
+        }
+    }
 }
 

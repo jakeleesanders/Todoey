@@ -10,15 +10,23 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    let itemArrayKey = "TodoListArray"
-    
+    // Persistent storage
+    let defaults = UserDefaults.standard
+
+    /*
+    ** Array of items in the todo list
+    ** Note that the initial values below are only retained if
+    ** itemArray has not yet been saved in persistent storage
+    */
     var itemArray = ["Find Mike", "Buy Eggos", "Destroy Demogorgon"]
     
-    let defaults = UserDefaults.standard
+    // Key for accessing itemArray in persistent storage
+    let itemArrayKey = "TodoListArray"
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        // If itemArray has been saved in persistent storage, then load it
         if let items = defaults.array(forKey: itemArrayKey) as? [String] {
             itemArray = items
         }
@@ -69,7 +77,7 @@ class TodoListViewController: UITableViewController {
             // Add new item to array
             self.itemArray.append(textField.text!)
             
-            // Save data for persistent storage
+            // Save itemArray in persistent storage
             self.defaults.set(self.itemArray, forKey: self.itemArrayKey)
             
             // Redraw the table to show the new item

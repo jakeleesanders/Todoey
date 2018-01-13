@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController {
 
@@ -17,25 +18,41 @@ class CategoryViewController: SwipeTableViewController {
     // Array of todo list categories
     var categories: Results<Category>?
     
+    var emptyCategoryCount = 1
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
         // Load categories from persistent storage
         loadCategories()
-        
-        tableView.rowHeight = 80.0
     }
 
     //MARK: - TableView Datasource Methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories?.count ?? 1
+        let count = categories?.count ?? emptyCategoryCount
+        print("Num Category Cells: \(count) EmptyCount: \(emptyCategoryCount)")
+        return max(count,emptyCategoryCount)
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-        cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories Added Yet"
+        let count = categories?.count ?? 0
 
+        var category : Category?
+        
+        print("indexPath.row:\(indexPath.row) count:\(count)")
+        
+        if ( indexPath.row < count ) {
+            category = categories?[indexPath.row]
+            emptyCategoryCount = 0
+        }
+        
+        cell.textLabel?.text = category?.name ?? "No Categories Added Yet"
+        cell.backgroundColor = UIColor(hexString: category?.color ?? "1D9BF6")
+        
+        print("Cell \(indexPath.row) text: \(cell.textLabel?.text)")
+        
         return cell
     }
     
@@ -67,6 +84,7 @@ class CategoryViewController: SwipeTableViewController {
             // Create new item
             let newCategory = Category()
             newCategory.name = textField.text!
+            newCategory.color = UIColor.randomFlat.hexValue()
             
             // Add new category
             self.save(category: newCategory)
